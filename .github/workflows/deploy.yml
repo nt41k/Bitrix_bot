@@ -18,9 +18,9 @@ jobs:
         git config --global user.email "github-actions@github.com"
         git config --global user.name "GitHub Actions"
         git config --global --add safe.directory /opt/hermes/scripts/cargonovo_automation
-        git config --global pull.rebase false
         cd /opt/hermes/scripts/cargonovo_automation
-        git pull origin main --no-rebase
+        git fetch origin
+        git reset --hard origin/main
         systemctl restart cargonovo-bot
         echo "Deployment completed at $(date)"
     
