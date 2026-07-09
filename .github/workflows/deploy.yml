@@ -15,10 +15,10 @@ jobs:
     
     - name: Deploy on server
       run: |
-        sudo git config --global --add safe.directory /opt/hermes/scripts/cargonovo_automation
+        git config --global --add safe.directory /opt/hermes/scripts/cargonovo_automation
         cd /opt/hermes/scripts/cargonovo_automation
-        sudo git pull origin main
-        sudo systemctl restart cargonovo-bot
+        git pull origin main
+        systemctl restart cargonovo-bot
         echo "Deployment completed at $(date)"
     
     - name: Notify on success
