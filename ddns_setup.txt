@@ -1,0 +1,178 @@
+﻿========================================
+DUCKDNS DDNS SETUP INSTRUCTIONS
+========================================
+
+This file contains step-by-step instructions for setting up
+Dynamic DNS (DDNS) using DuckDNS for the cargonovo-bot server.
+
+----------------------------------------
+STEP 1: Register on DuckDNS
+----------------------------------------
+1. Open https://www.duckdns.org in your browser
+2. Sign in using one of the available methods:
+   - GitHub
+   - Google
+   - Twitter
+   - Reddit
+   - Persona
+
+----------------------------------------
+STEP 2: Create Subdomain
+----------------------------------------
+1. After login, you will see the dashboard
+2. In the "Domain" input field, enter:
+       cargonovo-bot
+3. Click "add domain"
+4. Your subdomain will be:
+       cargonovo-bot.duckdns.org
+5. The current server IP will be automatically associated
+
+----------------------------------------
+STEP 3: Get Your Token
+----------------------------------------
+1. On the DuckDNS dashboard, find the "token" section
+2. Copy your personal token (looks like a long hex string)
+3. Save it securely - you will need it for the update script
+
+----------------------------------------
+STEP 4: Install Required Packages
+----------------------------------------
+Run on server:
+    sudo apt update
+    sudo apt install -y curl cron
+
+Verify installation:
+    curl --version
+    crontab -l
+
+----------------------------------------
+STEP 5: Create Update Script
+----------------------------------------
+Create the script directory:
+    sudo mkdir -p /opt/hermes/scripts
+
+Create the update script:
+    sudo nano /opt/hermes/scripts/update-ddns.sh
+
+Paste the following content (replace YOUR_TOKEN with your actual token):
+
+    #!/bin/bash
+    # DuckDNS Update Script for cargonovo-bot
+    # This script updates the DDNS record with the current public IP
+
+    DOMAIN="cargonovo-bot"
+    TOKEN="YOUR_TOKEN"
+    LOGFILE="/var/log/ddns.log"
+
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - Updating DDNS..." >> "$LOGFILE"
+
+    RESPONSE=$(curl -s "https://www.duckdns.org/update/$DOMAIN/$TOKEN")
+
+    if [ "$RESPONSE" = "OK" ]; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - DDNS update successful" >> "$LOGFILE"
+    else
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - DDNS update failed: $RESPONSE" >> "$LOGFILE"
+    fi
+
+Save and exit (Ctrl+O, Enter, Ctrl+X).
+
+Make the script executable:
+    sudo chmod +x /opt/hermes/scripts/update-ddns.sh
+
+----------------------------------------
+STEP 6: Create Log File
+----------------------------------------
+Run on server:
+    sudo touch /var/log/ddns.log
+    sudo chmod 666 /var/log/ddns.log
+
+----------------------------------------
+STEP 7: Add to Crontab
+----------------------------------------
+Edit the crontab for the root user:
+    sudo crontab -e
+
+Add the following line at the end:
+    */5 * * * * /opt/hermes/scripts/update-ddns.sh
+
+This will run the update script every 5 minutes.
+
+Verify the crontab entry:
+    sudo crontab -l
+
+----------------------------------------
+STEP 8: Test the Update Script
+----------------------------------------
+Run the script manually:
+    /opt/hermes/scripts/update-ddns.sh
+
+Check the log:
+    cat /var/log/ddns.log
+
+You should see a success message.
+
+----------------------------------------
+STEP 9: Test the Domain
+----------------------------------------
+Wait a few minutes, then test:
+    ping cargonovo-bot.duckdns.org
+
+Or test the webhook endpoint:
+    curl http://cargonovo-bot.duckdns.org:5000/health
+
+Should return: {"status":"ok"}
+
+========================================
+TROUBLESHOOTING
+========================================
+
+1. DDNS update returns "KO"
+   - Check that your token is correct
+   - Verify the domain name is exactly "cargonovo-bot"
+   - Check DuckDNS dashboard for any issues
+
+2. Domain does not resolve
+   - DNS propagation can take up to 10 minutes
+   - Try: nslookup cargonovo-bot.duckdns.org
+   - Check your local DNS cache: sudo systemd-resolve --flush-caches
+
+3. Cron job not running
+   - Check cron service: sudo systemctl status cron
+   - Verify crontab: sudo crontab -l
+   - Check syslog: grep CRON /var/log/syslog
+
+4. Permission denied on script
+   - Make sure script is executable: ls -la /opt/hermes/scripts/update-ddns.sh
+   - Fix: sudo chmod +x /opt/hermes/scripts/update-ddns.sh
+
+5. Log file not writable
+   - Check permissions: ls -la /var/log/ddns.log
+   - Fix: sudo chmod 666 /var/log/ddns.log
+
+6. curl not found
+   - Install curl: sudo apt install -y curl
+
+========================================
+USEFUL COMMANDS
+========================================
+
+Check current public IP:
+    curl ifconfig.me
+
+Force DDNS update:
+    /opt/hermes/scripts/update-ddns.sh
+
+Monitor DDNS logs in real-time:
+    tail -f /var/log/ddns.log
+
+Check cron job execution:
+    grep CRON /var/log/syslog | tail -20
+
+Test webhook deployment URL:
+    curl -X POST http://cargonovo-bot.duckdns.org:5000/deploy 
+      -H "Content-Type: application/json" 
+      -H "X-Hub-Signature-256: sha256=..."
+
+========================================
+END OF INSTRUCTIONS
+========================================
