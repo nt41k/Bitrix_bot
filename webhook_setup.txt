@@ -1,0 +1,121 @@
+========================================
+WEBHOOK DEPLOY SETUP INSTRUCTIONS
+========================================
+
+This file contains instructions for setting up webhook-based deployment.
+Give this file to the server administrator or another agent.
+
+----------------------------------------
+STEP 1: Install Flask
+----------------------------------------
+Run on server:
+    pip install flask
+
+----------------------------------------
+STEP 2: Copy webhook_server.py
+----------------------------------------
+Copy the file "webhook_server.py" to:
+    /opt/hermes/scripts/cargonovo_automation/webhook_server.py
+
+----------------------------------------
+STEP 2.5: Initialize Git Repository (IMPORTANT!)
+----------------------------------------
+The webhook uses "git pull" to update code.
+You MUST initialize git in the project folder:
+
+Run on server:
+    cd /opt/hermes/scripts/cargonovo_automation
+    git init
+    git remote add origin https://github.com/nt41k/Bitrix_bot.git
+    git pull origin main
+
+If folder already has files:
+    git add -A
+    git commit -m "Initial server commit"
+    git branch -M main
+    git pull origin main --allow-unrelated-histories
+
+Verify:
+    git status
+    git log --oneline -3
+
+----------------------------------------
+STEP 3: Open firewall port
+----------------------------------------
+Run on server:
+    sudo ufw allow 5000/tcp
+Or if using iptables:
+    sudo iptables -A INPUT -p tcp --dport 5000 -j ACCEPT
+
+----------------------------------------
+STEP 4: Start webhook server
+----------------------------------------
+Run on server:
+    cd /opt/hermes/scripts/cargonovo_automation
+    nohup python3 webhook_server.py > webhook.log 2>&1 &
+
+To check if running:
+    curl http://localhost:5000/health
+
+Should return: {"status":"ok"}
+
+----------------------------------------
+STEP 5: Update GitHub Actions
+----------------------------------------
+The file .github/workflows/deploy.yml should be updated to use webhook.
+This is already done in the repository.
+
+----------------------------------------
+STEP 6: Test deployment
+----------------------------------------
+Push any change to GitHub main branch.
+GitHub Actions will send webhook to:
+    http://84.201.183.5:5000/deploy
+
+Check logs:
+    tail -f /opt/hermes/scripts/cargonovo_automation/webhook.log
+
+========================================
+IMPORTANT SECURITY NOTES
+========================================
+
+1. Change WEBHOOK_SECRET in webhook_server.py!
+   Use a random string, e.g.:
+   openssl rand -hex 32
+
+2. The same secret must be set in GitHub Actions workflow.
+
+3. Consider using HTTPS in production (via nginx reverse proxy).
+
+4. The webhook server runs on port 5000.
+   Make sure this port is accessible from GitHub Actions IPs.
+
+5. IMPORTANT: Server IP is dynamic and may change!
+   Current IP: 84.201.183.5
+   If deployment stops working, check current IP:
+       curl ifconfig.me
+   Then update IP in .github/workflows/deploy.yml
+   
+   Better solution: Set up DDNS (Dynamic DNS) on the server
+   Example services: duckdns.org, no-ip.com
+   This gives you a fixed domain name instead of changing IP.
+
+========================================
+TROUBLESHOOTING
+========================================
+
+If deployment fails:
+1. Check webhook server is running:
+   ps aux | grep webhook_server
+
+2. Check logs:
+   cat /opt/hermes/scripts/cargonovo_automation/webhook.log
+
+3. Test manually:
+   curl -X POST http://84.201.183.5:5000/deploy \
+     -H "Content-Type: application/json" \
+     -H "X-Hub-Signature-256: sha256=..."
+
+4. Check firewall:
+   sudo ufw status
+   sudo iptables -L | grep 5000
