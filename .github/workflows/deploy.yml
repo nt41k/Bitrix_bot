@@ -15,6 +15,7 @@ jobs:
     
     - name: Deploy on server
       run: |
+        git config --global --add safe.directory /opt/hermes/scripts/cargonovo_automation
         cd /opt/hermes/scripts/cargonovo_automation
         git pull origin main
         sudo systemctl restart cargonovo-bot
