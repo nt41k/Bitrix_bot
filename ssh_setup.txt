@@ -1,0 +1,88 @@
+========================================
+SSH + DDNS DEPLOY SETUP
+========================================
+
+This replaces webhook with SSH deployment using DDNS domain.
+DDNS automatically updates when server IP changes.
+
+----------------------------------------
+STEP 1: Generate SSH key for GitHub Actions
+----------------------------------------
+Run on server:
+    ssh-keygen -t ed25519 -C "github-actions" -f ~/.ssh/github_actions
+    # Press Enter twice (no passphrase)
+
+This creates:
+    ~/.ssh/github_actions     (private key)
+    ~/.ssh/github_actions.pub (public key)
+
+----------------------------------------
+STEP 2: Add public key to authorized_keys
+----------------------------------------
+Run on server:
+    cat ~/.ssh/github_actions.pub >> ~/.ssh/authorized_keys
+
+----------------------------------------
+STEP 3: Get private key for GitHub
+----------------------------------------
+Run on server:
+    cat ~/.ssh/github_actions
+
+Copy the ENTIRE output including:
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    ...
+    -----END OPENSSH PRIVATE KEY-----
+
+----------------------------------------
+STEP 4: Add to GitHub Secrets
+----------------------------------------
+Go to: https://github.com/nt41k/Bitrix_bot/settings/secrets/actions
+
+Add these secrets:
+
+Name: SERVER_HOST
+Value: cargonovo-bot.duckdns.org
+
+Name: SERVER_PORT
+Value: 22
+
+Name: SERVER_USER
+Value: root (or your server username)
+
+Name: SSH_PRIVATE_KEY
+Value: (paste the private key from Step 3)
+
+----------------------------------------
+STEP 5: Test SSH connection
+----------------------------------------
+From any computer:
+    ssh -i ~/.ssh/github_actions root@cargonovo-bot.duckdns.org
+
+Should connect without password.
+
+----------------------------------------
+STEP 6: Test deployment
+----------------------------------------
+Push any change to GitHub main branch.
+Check: https://github.com/nt41k/Bitrix_bot/actions
+
+========================================
+IMPORTANT NOTES
+========================================
+
+1. DDNS domain cargonovo-bot.duckdns.org auto-updates every 5 min
+2. SSH key has no passphrase (required for GitHub Actions)
+3. Keep private key secret! Never share or commit it.
+4. If SSH fails, check: sudo systemctl status sshd
+
+========================================
+TROUBLESHOOTING
+========================================
+
+If deployment fails:
+1. Check SSH is running: sudo systemctl status sshd
+2. Check port 22 is open: sudo ss -tlnp | grep 22
+3. Check DDNS works: ping cargonovo-bot.duckdns.org
+4. Test manually: ssh root@cargonovo-bot.duckdns.org
+5. Check GitHub Secrets are correct
+6. Check server firewall: sudo ufw status
