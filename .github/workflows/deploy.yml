@@ -7,24 +7,18 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Deploy to server via SSH
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: cargonovo-bot.duckdns.org
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SERVER_PORT || '22' }}
-        script: |
-          cd /opt/hermes/scripts/cargonovo_automation
-          git pull origin main
-          sudo systemctl restart cargonovo-bot
-          echo "Deployment completed at $(date)"
+    - name: Deploy on server
+      run: |
+        cd /opt/hermes/scripts/cargonovo_automation
+        git pull origin main
+        sudo systemctl restart cargonovo-bot
+        echo "Deployment completed at $(date)"
     
     - name: Notify on success
       if: success()
