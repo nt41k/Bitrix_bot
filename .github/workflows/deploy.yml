@@ -27,7 +27,7 @@ jobs:
       run: |
         PAYLOAD='{"ref":"main"}'
         SIGNATURE=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "16244d787f3c0a42917feb0b5cd008ea878e65d4d0472007b0e9f4bc327c0c78" | sed 's/^.* //')
-        curl -X POST http://51.250.124.34:5000/deploy \
+        curl -X POST http://51.250.53.17:5000/deploy \
           -H "Content-Type: application/json" \
           -H "X-Hub-Signature-256: sha256=$SIGNATURE" \
           -d "$PAYLOAD"

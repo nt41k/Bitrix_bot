@@ -70,7 +70,7 @@ STEP 6: Test deployment
 ----------------------------------------
 Push any change to GitHub main branch.
 GitHub Actions will send webhook to:
-    http://51.250.124.34:5000/deploy
+    http://51.250.53.17:5000/deploy
 
 Check logs:
     tail -f /opt/hermes/scripts/cargonovo_automation/webhook.log
@@ -91,7 +91,7 @@ IMPORTANT SECURITY NOTES
    Make sure this port is accessible from GitHub Actions IPs.
 
 5. IMPORTANT: Server IP is dynamic and may change!
-   Current IP: 51.250.124.34
+    Current IP: 51.250.53.17
    If deployment stops working, check current IP:
        curl ifconfig.me
    Then update IP in .github/workflows/deploy.yml
@@ -112,7 +112,7 @@ If deployment fails:
    cat /opt/hermes/scripts/cargonovo_automation/webhook.log
 
 3. Test manually:
-   curl -X POST http://51.250.124.34:5000/deploy \
+    curl -X POST http://51.250.53.17:5000/deploy \
      -H "Content-Type: application/json" \
      -H "X-Hub-Signature-256: sha256=..."
 
