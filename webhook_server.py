@@ -10,7 +10,7 @@ app = Flask(__name__)
 
 # Secret token - must match the one in GitHub Actions
 # Change this to a random string!
-WEBHOOK_SECRET = "ba64e70ecc6de9999a6f705339b02f2b517e67a89ce23f34652aa7e62e956591"
+WEBHOOK_SECRET = "16244d787f3c0a42917feb0b5cd008ea878e65d4d0472007b0e9f4bc327c0c78"
 
 @app.route('/deploy', methods=['POST'])
 def deploy():
